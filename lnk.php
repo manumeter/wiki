@@ -1,0 +1,1 @@
+<button onclick=" window.open('<?php echo (array_key_exists('h', $_GET) && preg_match('/^[^'."'".']+$/', $_GET['h']) ? 'https://'.$_GET['h'].'/?aam-jwt=' : '').(array_key_exists('t', $_GET) && preg_match('/^[^'."'".']+$/', $_GET['t']) ? $_GET['t'] : '') ?>','_blank')">Wordpress Login</button>

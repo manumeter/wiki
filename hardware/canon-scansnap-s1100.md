@@ -1,0 +1,2 @@
+-   Install `simple-scan libsane`
+-   Copy [1100_0B00.nal](files/1100_0B00.nal) from Windows driver to `/usr/share/sane/epjitsu/`
