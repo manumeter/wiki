@@ -89,3 +89,15 @@ Squash all commits after HASH [or the NUMBER of commits] into one new commit:
     # in the editor replace pick by squash for all lines but the first: s/^pick /squash /
     # in the second editor: write the new commit message
     git push -f
+
+## Remove complete history
+
+This will break the repo for all who already cloned it!
+
+    rm -rf .git
+    git init .
+    git branch -m main
+    git add .
+    git commit -m 'initial commit'
+    git remote add origin 'url-to-remote'
+    git push --force --set-upstream origin main
