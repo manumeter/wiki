@@ -16,3 +16,9 @@
 ### Cut video (ss=start, t=length)
 
     ffmpeg -i video-file.uncut -ss 00:00:05.0 -c copy -t 00:05:57.0 video-file.cut
+
+### Shrink to half/third/quarter size
+
+    ffmpeg -i input.mkv -vf "scale=trunc(iw/4)*2:trunc(ih/4)*2" -c:v libx265 -crf 28 output.mkv
+    ffmpeg -i input.mkv -vf "scale=trunc(iw/6)*2:trunc(ih/6)*2" -c:v libx265 -crf 28 output.mkv
+    ffmpeg -i input.mkv -vf "scale=trunc(iw/8)*2:trunc(ih/8)*2" -c:v libx265 -crf 28 output.mkv
