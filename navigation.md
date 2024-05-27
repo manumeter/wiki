@@ -5,6 +5,7 @@
 [Linux]()
 
 - [Bash](linux/bash.md)
+- [Chroot](linux/chroot.md)
 - [Certbot](linux/certbot.md)
 - [Ffmpeg](linux/ffmpeg.md)
 - [Filesystems](linux/filesystems.md)
