@@ -6,11 +6,11 @@ Clone fork and add upstream repo:
     git remote add upstream path-to-upstream.git
     git remote -v
 
-Fetch upstream, checkout upstream/master and merge it into the fork-repo:
+Fetch upstream, checkout upstream/main and merge it into the fork-repo:
 
     git fetch upstream
-	git checkout master
-	git merge upstream/master
+	git checkout main
+	git merge upstream/main
 	git status
 
 ## Branching
@@ -25,14 +25,15 @@ Switch branch:
     git pull
     git checkout BRANCH
 
-Diff branch to master:
+Diff branch to main:
 
-    git diff master..BRANCH
+    git diff main..BRANCH
 
-Merge branch to master:
+Merge branch to main:
 
-    git checkout master
+    git checkout main
     git merge BRANCH
+    # or git merge --squash BRANCH
     git push
     # and to delete it:
     git branch -d BRANCH
