@@ -19,6 +19,7 @@
 - [SElinux](linux/selinux.md)
 - [SSH](linux/ssh.md)
 - [Sleuthkit](linux/sleuthkit.md)
+- [Talos](linux/talos.md)
 - [Users & Files](linux/users.md)
 - [Vim](linux/vim.md)
 - [VirtualBox](linux/virtualbox.md)
