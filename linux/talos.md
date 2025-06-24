@@ -12,3 +12,7 @@
     # download the admin kubeconfig from the cluster (when installed)
     talosctl -n {clustername} kubeconfig
 
+## Setup Cluster
+
+    # bootstrap init node
+    talosctl -n talos-lab1 bootstrap
