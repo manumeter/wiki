@@ -15,7 +15,7 @@
 ## Setup Cluster
 
     # bootstrap init node
-    talosctl -n talos-lab1 bootstrap
+    talosctl -n {init-node} bootstrap
 
 ## Host Intrusion for Debugging
 
@@ -30,3 +30,7 @@
     umount /host/var/mnt/debug
     rmdir /host/var/mnt/debug
 
+## Network Debugging
+
+    talosctl -n {node} get addresses
+    talosctl -n {node} pcap -i eno1 --bpf-filter "$(tcpdump -dd -y EN10MB 'host {dest-host}')" -o - |tcpdump -vvv -r -
