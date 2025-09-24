@@ -34,6 +34,7 @@ Merge branch to main:
     git checkout main
     git merge BRANCH
     # or git merge --squash BRANCH
+    #    git commit -am "new commit"
     git push
     # and to delete it:
     git branch -d BRANCH
