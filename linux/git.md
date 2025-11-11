@@ -1,3 +1,8 @@
+## Log/Diff/...
+
+    # Diff of a specific commit
+    git diff <hash>^!
+
 ## Work with fork/upstream repos
 
 Clone fork and add upstream repo:
