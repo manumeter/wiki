@@ -49,5 +49,3 @@
 - [Trockentoilette](wagen/trockentoilette.md)
 
 [Münzen](muenzen.md)
-
-[Permakultur](permakultur.md)
