@@ -4,6 +4,7 @@
 
 [Linux]()
 
+- [ArgoCD](linux/argocd.md)
 - [Bash](linux/bash.md)
 - [Chroot](linux/chroot.md)
 - [Certbot](linux/certbot.md)
