@@ -54,3 +54,5 @@
 	${MYVAR:x:y}             # cut string from char x, y chars long
 	${MYVAR: -x} or
 	${MYVAR:(-x)}}           # cut string from start to end minus x
+	${MYVAR,}                # first character to lowercase
+	${MYVAR,,}               # all characters to lowercase
