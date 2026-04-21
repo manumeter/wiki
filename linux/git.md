@@ -23,7 +23,7 @@ Fetch upstream, checkout upstream/main and merge it into the fork-repo:
 Create additional branch:
 
     git checkout -b BRANCH
-    git push origin BRANCH
+    git push --set-upstream origin BRANCH
 
 Switch branch:
 
