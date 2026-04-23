@@ -49,10 +49,11 @@
     ${MYVAR//search/replace} # replace all matches of substring
     ${MYVAR/#search/replace} # replace match at the begin of string
     ${MYVAR/%search/replace} # replace match at the end of string
-	${#MYVAR}                # string length
-	${MYVAR:x}               # cut string from char x to the end
-	${MYVAR:x:y}             # cut string from char x, y chars long
-	${MYVAR: -x} or
-	${MYVAR:(-x)}}           # cut string from start to end minus x
-	${MYVAR,}                # first character to lowercase
-	${MYVAR,,}               # all characters to lowercase
+    ${#MYVAR}                # string length
+    ${MYVAR:x}               # cut string from char x to the end
+    ${MYVAR:x:y}             # cut string from char x, y chars long
+    ${MYVAR: -x} or
+    ${MYVAR:(-x)}}           # cut string from start to end minus x
+    ${MYVAR,}                # first character to lowercase
+    ${MYVAR,,}               # all characters to lowercase
+    ${MYVAR:-default}        # default value if var is empty
