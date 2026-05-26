@@ -56,4 +56,8 @@
     ${MYVAR:(-x)}}           # cut string from start to end minus x
     ${MYVAR,}                # first character to lowercase
     ${MYVAR,,}               # all characters to lowercase
-    ${MYVAR:-default}        # default value if var is empty
+    ${MYVAR-default}         # value if var is not set
+    ${MYVAR:-default}        # value if var is not set or empty
+    ${MYVAR+content}         # value if var is set
+    ${MYVAR:+content}        # value if var is set and not empty
+
