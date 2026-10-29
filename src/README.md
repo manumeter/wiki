@@ -38,11 +38,14 @@ To support another highlight.js language, copy its `languages/<name>.min.js` fro
 
 ## Writing pages
 
-- `navigation.md` defines the sidebar: the `#` heading is the site title, `[Name](page.md)` is a
-  link, `[Name]()` starts a collapsible group containing the list below it.
+- `navigation.md` defines the sidebar: the `#` heading is the site title, every other link
+  (`[Name](page.md)`) or heading is a top-level entry, and a list directly below it becomes its
+  children. Nested lists give deeper levels; `[Name]()` is an entry without a page of its own.
+  Entries with children are collapsible and start collapsed, except the branch of the open page.
 - Pages are linked as `#!path/page.md` (or `#!path/page.md#heading-id`); relative links and
   images in a page resolve relative to that page.
-- Code blocks without a language are highlighted as shell. Give everything else an explicit
+- Code blocks without a language are highlighted as shell (with command names and `-o`/`--options`
+  marked on top of highlight.js' bash grammar, see `app.js`). Give everything else an explicit
   language: ```` ```sql ````, ```` ```ini ````, ```` ```yaml ````, ```` ```text ```` (no highlighting), ...
 - Markdown is parsed as CommonMark/GFM: a code block inside a list item must be indented to the
   item's content (or be a fenced block indented like the item text).

@@ -19,7 +19,7 @@ const INDEX = 'index.md';
 
 const state = {
   siteTitle: document.title,
-  nav: [],        // [{title, page|href}] or [{title, items: [...]}]
+  nav: [],        // tree of {title, page | href, children}
   flat: [],       // nav entries pointing to local .md pages, in order
   page: null,
   cache: new Map(), // page -> Promise<{text, modified}>
@@ -91,6 +91,28 @@ function fetchPage(page) {
 function slugify(text) {
   return text.toLowerCase().trim().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '') || 'section';
 }
+
+// highlight.js' bash grammar only knows keywords and builtins; additionally mark command names
+// (first word of a command, also after | ; && $( sudo ...) and -o / --options.
+(() => {
+  const bash = hljs.getLanguage('bash');
+  if (!bash || !bash.rawDefinition) return;
+  const raw = bash.rawDefinition;
+  const KEYWORDS = 'if|then|else|elif|fi|for|while|until|do|done|case|esac|in|function|select';
+  const COMMAND = {
+    scope: 'command',
+    match: new RegExp('(?<!\\\\\\n[ \\t]*)' + // not on a continuation line
+      '(?<=^[ \\t]*|[|;&(`][ \\t]*|\\b(?:sudo|then|do|else|exec|xargs|time|env|nohup|watch|command)[ \\t]+)' +
+      `(?!(?:${KEYWORDS})(?![\\w.-]))` +
+      '[A-Za-z_.\\/~][\\w.+\\/~-]*(?=[ \\t;|&)]|$)'),
+  };
+  const OPTION = { scope: 'option', match: /(?<=[ \t])--?[A-Za-z0-9][\w.-]*/ };
+  hljs.registerLanguage('bash', () => {
+    const def = raw();
+    def.contains = [...def.contains, COMMAND, OPTION];
+    return def;
+  });
+})();
 
 // Code blocks without a language are almost always shell commands in this wiki;
 // label other languages explicitly (```sql, ```ini, ```text, ...).
@@ -186,78 +208,92 @@ function firstLink(tokens) {
 
 function navEntry(link) {
   const href = link.href || '';
-  const entry = { title: link.text.replace(/[*_`]/g, '') };
-  const target = href && resolveLink(href, INDEX);
+  const entry = { title: link.text.replace(/[*_`]/g, ''), children: [] };
+  const target = href && href !== '#' && resolveLink(href, INDEX);
   if (target && target.page) entry.page = target.page;
   else if (target) { entry.href = target.url; entry.external = !!target.external; }
   return entry;
 }
 
+function listEntries(list) {
+  return list.items.map(item => {
+    const link = firstLink(item.tokens);
+    const entry = link ? navEntry(link) : { title: item.text.split('\n')[0].trim(), children: [] };
+    for (const sub of item.tokens.filter(t => t.type === 'list')) entry.children.push(...listEntries(sub));
+    return entry;
+  }).filter(e => e.title);
+}
+
+// navigation.md: "# Title" = site title; links/headings are top-level entries, a list directly
+// below one becomes its children (nested lists = deeper levels). "[Name]()" = entry without page.
 function parseNav(md) {
   const nav = [];
-  let group = null;
+  let current = null;
   for (const t of marked.lexer(md)) {
     if (t.type === 'heading' && t.depth === 1) state.siteTitle = t.text;
-    else if (t.type === 'heading') nav.push(group = { title: t.text, items: [] });
+    else if (t.type === 'heading') nav.push(current = { title: t.text, children: [] });
     else if (t.type === 'paragraph') {
-      for (const l of t.tokens.filter(x => x.type === 'link')) {
-        const entry = navEntry(l);
-        if (!l.href || l.href === '#') nav.push(group = { title: entry.title, items: [] });
-        else { nav.push(entry); group = null; }
-      }
+      for (const l of t.tokens.filter(x => x.type === 'link')) nav.push(current = navEntry(l));
     } else if (t.type === 'list') {
-      for (const item of t.items) {
-        const l = firstLink(item.tokens);
-        if (l) (group ? group.items : nav).push(navEntry(l));
-      }
+      (current ? current.children : nav).push(...listEntries(t));
     }
   }
   return nav;
 }
 
+function walkNav(entries, fn, parents = []) {
+  for (const e of entries) {
+    fn(e, parents);
+    walkNav(e.children, fn, [...parents, e]);
+  }
+}
+
 const CHEVRON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
 
-function navLink(entry) {
-  if (entry.page) return h('a', { class: 'nav-link', href: routeHref(entry.page), 'data-page': entry.page }, entry.title);
-  const a = h('a', { class: 'nav-link', href: entry.href || '#' }, entry.title);
-  if (entry.external) { a.target = '_blank'; a.rel = 'noopener'; }
-  return a;
+function navNode(entry) {
+  const node = h('div', { class: 'nav-node' + (entry.children.length ? ' has-children collapsed' : '') });
+  let label;
+  if (entry.page) label = h('a', { class: 'nav-link', href: routeHref(entry.page), 'data-page': entry.page }, entry.title);
+  else if (entry.href) {
+    label = h('a', { class: 'nav-link', href: entry.href }, entry.title);
+    if (entry.external) { label.target = '_blank'; label.rel = 'noopener'; }
+  } else {
+    label = h('button', { class: 'nav-link', type: 'button' }, entry.title);
+    label.addEventListener('click', () => node.classList.toggle('collapsed'));
+  }
+  const row = h('div', { class: 'nav-row' }, label);
+  if (entry.children.length) {
+    const toggle = h('button', { class: 'nav-toggle', type: 'button', 'aria-label': 'Expand ' + entry.title });
+    toggle.innerHTML = CHEVRON;
+    toggle.addEventListener('click', () => node.classList.toggle('collapsed'));
+    // groups without a page of their own toggle on the whole row
+    if (label.tagName === 'BUTTON') { toggle.tabIndex = -1; toggle.setAttribute('aria-hidden', 'true'); }
+    row.append(toggle);
+  }
+  node.append(row);
+  if (entry.children.length) node.append(h('div', { class: 'nav-children' }, ...entry.children.map(navNode)));
+  return node;
 }
 
 function renderNav() {
-  const collapsed = new Set(JSON.parse(localStorage.getItem('wiki-collapsed') || '[]'));
-  const root = $('#nav');
-  root.textContent = '';
-  for (const entry of state.nav) {
-    if (!entry.items) { root.append(navLink(entry)); continue; }
-    const group = h('section', { class: 'nav-group' + (collapsed.has(entry.title) ? ' collapsed' : '') });
-    const btn = h('button', { class: 'nav-group-title', type: 'button' }, entry.title);
-    btn.insertAdjacentHTML('beforeend', CHEVRON);
-    btn.addEventListener('click', () => {
-      group.classList.toggle('collapsed');
-      const now = new Set(JSON.parse(localStorage.getItem('wiki-collapsed') || '[]'));
-      group.classList.contains('collapsed') ? now.add(entry.title) : now.delete(entry.title);
-      localStorage.setItem('wiki-collapsed', JSON.stringify([...now]));
-    });
-    group.append(btn, h('div', { class: 'nav-items' }, ...entry.items.map(navLink)));
-    root.append(group);
-  }
+  $('#nav').replaceChildren(...state.nav.map(navNode));
   $('#brand').textContent = state.siteTitle;
 }
 
+// Highlights the page's entry and expands its ancestors (everything else starts collapsed).
 function markActiveNav(page) {
   for (const a of $$('#nav .active')) a.classList.remove('active');
   const a = $$('#nav a[data-page]').find(x => x.dataset.page === page);
   if (!a) return;
   a.classList.add('active');
-  a.closest('.nav-group')?.classList.remove('collapsed');
+  for (let n = a.closest('.nav-node').parentElement.closest('.nav-node'); n; n = n.parentElement.closest('.nav-node')) n.classList.remove('collapsed');
   a.scrollIntoView({ block: 'nearest' });
 }
 
-function navInfo(page) {
-  const i = state.flat.findIndex(e => e.page === page);
-  const group = state.nav.find(e => e.items && e.items.some(x => x.page === page));
-  return { entry: state.flat[i], prev: i > 0 ? state.flat[i - 1] : null, next: i >= 0 ? state.flat[i + 1] : null, group };
+function navParents(page) {
+  let found = null;
+  walkNav(state.nav, (e, parents) => { if (!found && e.page === page) found = parents; });
+  return found || [];
 }
 
 function pageTitle(page, doc) {
@@ -282,13 +318,14 @@ async function show(route) {
   const main = $('#content');
   main.classList.add('loading');
 
-  let doc, modified = null;
+  let doc, modified = null, loaded = false;
   try {
     if (!isAllowedPage(page)) throw new Error('Not a wiki page');
     const res = await fetchPage(page);
     if (state.page !== page) return;
     modified = res.modified;
     doc = renderPage(res.text, page);
+    loaded = true;
   } catch (err) {
     if (state.page !== page) return;
     doc = h('article', { class: 'doc' },
@@ -297,20 +334,16 @@ async function show(route) {
       h('p', {}, h('a', { href: routeHref(INDEX) }, 'Back to the start page')));
   }
 
-  const info = navInfo(page);
+  const parents = navParents(page);
   const title = pageTitle(page, doc);
   if (!$('h1', doc)) doc.prepend(h('h1', {}, title));
-  if (info.group) doc.prepend(h('div', { class: 'eyebrow' }, info.group.title));
+  if (parents.length) doc.prepend(h('div', { class: 'eyebrow' }, parents.map(e => e.title).join(' › ')));
   document.title = page === INDEX ? state.siteTitle : `${title} · ${state.siteTitle}`;
 
   const footer = h('footer', { class: 'doc-footer' });
-  if (modified) footer.append(h('div', { class: 'modified' }, 'Last updated ' + new Date(modified).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })));
-  if (info.prev || info.next) {
-    const pager = h('nav', { class: 'pager' });
-    const card = (e, label, cls) => h('a', { class: 'pager-link ' + cls, href: routeHref(e.page) }, h('span', { class: 'pager-label' }, label), h('span', { class: 'pager-title' }, e.title));
-    pager.append(info.prev ? card(info.prev, 'Previous', 'prev') : h('span'));
-    if (info.next) pager.append(card(info.next, 'Next', 'next'));
-    footer.append(pager);
+  if (loaded) {
+    if (modified) footer.append(h('span', {}, 'Last updated ' + new Date(modified).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })));
+    footer.append(h('a', { href: encodeURI(page), target: '_blank', rel: 'noopener' }, 'Raw markdown'));
   }
 
   main.replaceChildren(doc, footer);
@@ -492,7 +525,7 @@ async function init() {
     const nav = await fetch('navigation.md', { cache: 'no-cache' });
     if (nav.ok) state.nav = parseNav(await nav.text());
   } catch { /* no navigation, pages still work */ }
-  state.flat = state.nav.flatMap(e => e.items || [e]).filter(e => e.page);
+  walkNav(state.nav, e => { if (e.page) state.flat.push(e); });
   renderNav();
   show(currentRoute());
 }

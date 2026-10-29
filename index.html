@@ -147,25 +147,30 @@ kbd {
   font-size: 14.5px;
   scrollbar-width: thin;
 }
+.nav-node { margin: 1px 0; }
+.nav-row { display: flex; align-items: center; border-radius: 6px; }
+.nav-row:hover { background: var(--bg-soft); }
+.nav-row:has(.active) { background: var(--bg-mute); }
 .nav-link {
-  display: block; padding: 5px 10px; margin: 1px 0;
-  border-radius: 6px; color: var(--text-2); line-height: 1.45;
+  flex: 1; min-width: 0; display: block; padding: 5px 10px;
+  border: 0; background: none; font: inherit; text-align: left; cursor: pointer;
+  color: var(--text-2); line-height: 1.45;
 }
-.nav-link:hover { color: var(--text); background: var(--bg-soft); text-decoration: none; }
-.nav-link.active { color: var(--text); background: var(--bg-mute); font-weight: 600; }
-#nav > .nav-link { font-weight: 600; color: var(--text); }
-
-.nav-group { margin: 14px 0 4px; }
-.nav-group-title {
-  display: flex; align-items: center; justify-content: space-between; width: 100%;
-  padding: 5px 10px; border: 0; background: none; cursor: pointer;
-  font-weight: 650; color: var(--text); text-align: left; border-radius: 6px;
+.nav-link:hover { color: var(--text); text-decoration: none; }
+.has-children > .nav-row > .nav-link { color: var(--text); font-weight: 500; }
+#nav > .nav-node > .nav-row > .nav-link { color: var(--text); font-weight: 600; }
+.nav-link.active, #nav .nav-link.active { color: var(--text); font-weight: 600; }
+.nav-toggle {
+  flex: none; display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; margin-right: 3px; padding: 0;
+  border: 0; border-radius: 5px; background: none; color: var(--text-3); cursor: pointer;
 }
-.nav-group-title:hover { background: var(--bg-soft); }
-.nav-group-title svg { width: 15px; height: 15px; color: var(--text-3); transform: rotate(90deg); transition: transform .15s; }
-.nav-group.collapsed .nav-group-title svg { transform: none; }
-.nav-group.collapsed .nav-items { display: none; }
-.nav-items { margin-left: 10px; padding-left: 8px; border-left: 1px solid var(--border); }
+.nav-toggle:hover { color: var(--text); background: var(--bg-mute); }
+.nav-toggle svg { width: 15px; height: 15px; transform: rotate(90deg); transition: transform .15s; }
+.collapsed > .nav-row .nav-toggle svg { transform: none; }
+.collapsed > .nav-children { display: none; }
+.nav-children { padding: 1px 0 6px 14px; }
+.nav-children .nav-children { padding-bottom: 2px; }
 
 main { min-width: 0; padding: 40px 48px 64px; }
 #content { max-width: var(--content-w); margin: 0 auto; transition: opacity .15s; }
@@ -270,6 +275,8 @@ main { min-width: 0; padding: 40px 48px 64px; }
 .hljs-section { font-weight: 600; }
 .hljs-variable, .hljs-template-variable, .hljs-attr, .hljs-attribute, .hljs-built_in, .hljs-params, .hljs-property, .hljs-selector-attr, .hljs-selector-pseudo { color: var(--hl-variable); }
 .hljs-name, .hljs-tag, .hljs-subst { color: var(--hl-tag); }
+.hljs-command { color: var(--hl-title); }
+.hljs-option { color: var(--hl-number); }
 .hljs-subst { color: var(--text); }
 .hljs-addition { color: var(--hl-tag); background: var(--hl-add-bg); }
 .hljs-deletion { color: var(--hl-keyword); background: var(--hl-del-bg); }
@@ -278,19 +285,10 @@ main { min-width: 0; padding: 40px 48px 64px; }
 
 /* ---------- footer ---------- */
 
-.doc-footer { margin-top: 3.5rem; }
-.modified { font-size: 13.5px; color: var(--text-3); margin-bottom: 1.2rem; text-align: right; }
-.pager { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; border-top: 1px solid var(--border); padding-top: 24px; }
-.pager-link {
-  display: flex; flex-direction: column; gap: 2px;
-  padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px;
-}
-.pager-link:hover { border-color: var(--text-3); text-decoration: none; }
-.pager-link.next { text-align: right; grid-column: 2; }
-.pager-label { font-size: 12.5px; color: var(--text-3); }
-.pager-title { font-weight: 600; }
-.pager-link.prev .pager-title::before { content: "← "; }
-.pager-link.next .pager-title::after { content: " →"; }
+.doc-footer { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 4px 12px; margin-top: 3.5rem; font-size: 13.5px; color: var(--text-3); }
+.doc-footer > * + *::before { content: "·"; margin-right: 12px; color: var(--text-3); }
+.doc-footer a { color: var(--text-3); }
+.doc-footer a:hover { color: var(--text); text-decoration: underline; }
 
 /* ---------- search ---------- */
 
@@ -354,7 +352,7 @@ dialog::backdrop { background: rgba(10, 14, 22, .45); backdrop-filter: blur(2px)
 }
 
 @media print {
-  .topbar, .sidebar, .toc, .pager, .code-block .copy { display: none !important; }
+  .topbar, .sidebar, .toc, .doc-footer, .code-block .copy { display: none !important; }
   .layout { display: block; padding: 0; }
   main { padding: 0; }
 }
@@ -1877,7 +1875,7 @@ const INDEX = 'index.md';
 
 const state = {
   siteTitle: document.title,
-  nav: [],        // [{title, page|href}] or [{title, items: [...]}]
+  nav: [],        // tree of {title, page | href, children}
   flat: [],       // nav entries pointing to local .md pages, in order
   page: null,
   cache: new Map(), // page -> Promise<{text, modified}>
@@ -1949,6 +1947,28 @@ function fetchPage(page) {
 function slugify(text) {
   return text.toLowerCase().trim().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '') || 'section';
 }
+
+// highlight.js' bash grammar only knows keywords and builtins; additionally mark command names
+// (first word of a command, also after | ; && $( sudo ...) and -o / --options.
+(() => {
+  const bash = hljs.getLanguage('bash');
+  if (!bash || !bash.rawDefinition) return;
+  const raw = bash.rawDefinition;
+  const KEYWORDS = 'if|then|else|elif|fi|for|while|until|do|done|case|esac|in|function|select';
+  const COMMAND = {
+    scope: 'command',
+    match: new RegExp('(?<!\\\\\\n[ \\t]*)' + // not on a continuation line
+      '(?<=^[ \\t]*|[|;&(`][ \\t]*|\\b(?:sudo|then|do|else|exec|xargs|time|env|nohup|watch|command)[ \\t]+)' +
+      `(?!(?:${KEYWORDS})(?![\\w.-]))` +
+      '[A-Za-z_.\\/~][\\w.+\\/~-]*(?=[ \\t;|&)]|$)'),
+  };
+  const OPTION = { scope: 'option', match: /(?<=[ \t])--?[A-Za-z0-9][\w.-]*/ };
+  hljs.registerLanguage('bash', () => {
+    const def = raw();
+    def.contains = [...def.contains, COMMAND, OPTION];
+    return def;
+  });
+})();
 
 // Code blocks without a language are almost always shell commands in this wiki;
 // label other languages explicitly (```sql, ```ini, ```text, ...).
@@ -2044,78 +2064,92 @@ function firstLink(tokens) {
 
 function navEntry(link) {
   const href = link.href || '';
-  const entry = { title: link.text.replace(/[*_`]/g, '') };
-  const target = href && resolveLink(href, INDEX);
+  const entry = { title: link.text.replace(/[*_`]/g, ''), children: [] };
+  const target = href && href !== '#' && resolveLink(href, INDEX);
   if (target && target.page) entry.page = target.page;
   else if (target) { entry.href = target.url; entry.external = !!target.external; }
   return entry;
 }
 
+function listEntries(list) {
+  return list.items.map(item => {
+    const link = firstLink(item.tokens);
+    const entry = link ? navEntry(link) : { title: item.text.split('\n')[0].trim(), children: [] };
+    for (const sub of item.tokens.filter(t => t.type === 'list')) entry.children.push(...listEntries(sub));
+    return entry;
+  }).filter(e => e.title);
+}
+
+// navigation.md: "# Title" = site title; links/headings are top-level entries, a list directly
+// below one becomes its children (nested lists = deeper levels). "[Name]()" = entry without page.
 function parseNav(md) {
   const nav = [];
-  let group = null;
+  let current = null;
   for (const t of marked.lexer(md)) {
     if (t.type === 'heading' && t.depth === 1) state.siteTitle = t.text;
-    else if (t.type === 'heading') nav.push(group = { title: t.text, items: [] });
+    else if (t.type === 'heading') nav.push(current = { title: t.text, children: [] });
     else if (t.type === 'paragraph') {
-      for (const l of t.tokens.filter(x => x.type === 'link')) {
-        const entry = navEntry(l);
-        if (!l.href || l.href === '#') nav.push(group = { title: entry.title, items: [] });
-        else { nav.push(entry); group = null; }
-      }
+      for (const l of t.tokens.filter(x => x.type === 'link')) nav.push(current = navEntry(l));
     } else if (t.type === 'list') {
-      for (const item of t.items) {
-        const l = firstLink(item.tokens);
-        if (l) (group ? group.items : nav).push(navEntry(l));
-      }
+      (current ? current.children : nav).push(...listEntries(t));
     }
   }
   return nav;
 }
 
+function walkNav(entries, fn, parents = []) {
+  for (const e of entries) {
+    fn(e, parents);
+    walkNav(e.children, fn, [...parents, e]);
+  }
+}
+
 const CHEVRON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
 
-function navLink(entry) {
-  if (entry.page) return h('a', { class: 'nav-link', href: routeHref(entry.page), 'data-page': entry.page }, entry.title);
-  const a = h('a', { class: 'nav-link', href: entry.href || '#' }, entry.title);
-  if (entry.external) { a.target = '_blank'; a.rel = 'noopener'; }
-  return a;
+function navNode(entry) {
+  const node = h('div', { class: 'nav-node' + (entry.children.length ? ' has-children collapsed' : '') });
+  let label;
+  if (entry.page) label = h('a', { class: 'nav-link', href: routeHref(entry.page), 'data-page': entry.page }, entry.title);
+  else if (entry.href) {
+    label = h('a', { class: 'nav-link', href: entry.href }, entry.title);
+    if (entry.external) { label.target = '_blank'; label.rel = 'noopener'; }
+  } else {
+    label = h('button', { class: 'nav-link', type: 'button' }, entry.title);
+    label.addEventListener('click', () => node.classList.toggle('collapsed'));
+  }
+  const row = h('div', { class: 'nav-row' }, label);
+  if (entry.children.length) {
+    const toggle = h('button', { class: 'nav-toggle', type: 'button', 'aria-label': 'Expand ' + entry.title });
+    toggle.innerHTML = CHEVRON;
+    toggle.addEventListener('click', () => node.classList.toggle('collapsed'));
+    // groups without a page of their own toggle on the whole row
+    if (label.tagName === 'BUTTON') { toggle.tabIndex = -1; toggle.setAttribute('aria-hidden', 'true'); }
+    row.append(toggle);
+  }
+  node.append(row);
+  if (entry.children.length) node.append(h('div', { class: 'nav-children' }, ...entry.children.map(navNode)));
+  return node;
 }
 
 function renderNav() {
-  const collapsed = new Set(JSON.parse(localStorage.getItem('wiki-collapsed') || '[]'));
-  const root = $('#nav');
-  root.textContent = '';
-  for (const entry of state.nav) {
-    if (!entry.items) { root.append(navLink(entry)); continue; }
-    const group = h('section', { class: 'nav-group' + (collapsed.has(entry.title) ? ' collapsed' : '') });
-    const btn = h('button', { class: 'nav-group-title', type: 'button' }, entry.title);
-    btn.insertAdjacentHTML('beforeend', CHEVRON);
-    btn.addEventListener('click', () => {
-      group.classList.toggle('collapsed');
-      const now = new Set(JSON.parse(localStorage.getItem('wiki-collapsed') || '[]'));
-      group.classList.contains('collapsed') ? now.add(entry.title) : now.delete(entry.title);
-      localStorage.setItem('wiki-collapsed', JSON.stringify([...now]));
-    });
-    group.append(btn, h('div', { class: 'nav-items' }, ...entry.items.map(navLink)));
-    root.append(group);
-  }
+  $('#nav').replaceChildren(...state.nav.map(navNode));
   $('#brand').textContent = state.siteTitle;
 }
 
+// Highlights the page's entry and expands its ancestors (everything else starts collapsed).
 function markActiveNav(page) {
   for (const a of $$('#nav .active')) a.classList.remove('active');
   const a = $$('#nav a[data-page]').find(x => x.dataset.page === page);
   if (!a) return;
   a.classList.add('active');
-  a.closest('.nav-group')?.classList.remove('collapsed');
+  for (let n = a.closest('.nav-node').parentElement.closest('.nav-node'); n; n = n.parentElement.closest('.nav-node')) n.classList.remove('collapsed');
   a.scrollIntoView({ block: 'nearest' });
 }
 
-function navInfo(page) {
-  const i = state.flat.findIndex(e => e.page === page);
-  const group = state.nav.find(e => e.items && e.items.some(x => x.page === page));
-  return { entry: state.flat[i], prev: i > 0 ? state.flat[i - 1] : null, next: i >= 0 ? state.flat[i + 1] : null, group };
+function navParents(page) {
+  let found = null;
+  walkNav(state.nav, (e, parents) => { if (!found && e.page === page) found = parents; });
+  return found || [];
 }
 
 function pageTitle(page, doc) {
@@ -2140,13 +2174,14 @@ async function show(route) {
   const main = $('#content');
   main.classList.add('loading');
 
-  let doc, modified = null;
+  let doc, modified = null, loaded = false;
   try {
     if (!isAllowedPage(page)) throw new Error('Not a wiki page');
     const res = await fetchPage(page);
     if (state.page !== page) return;
     modified = res.modified;
     doc = renderPage(res.text, page);
+    loaded = true;
   } catch (err) {
     if (state.page !== page) return;
     doc = h('article', { class: 'doc' },
@@ -2155,20 +2190,16 @@ async function show(route) {
       h('p', {}, h('a', { href: routeHref(INDEX) }, 'Back to the start page')));
   }
 
-  const info = navInfo(page);
+  const parents = navParents(page);
   const title = pageTitle(page, doc);
   if (!$('h1', doc)) doc.prepend(h('h1', {}, title));
-  if (info.group) doc.prepend(h('div', { class: 'eyebrow' }, info.group.title));
+  if (parents.length) doc.prepend(h('div', { class: 'eyebrow' }, parents.map(e => e.title).join(' › ')));
   document.title = page === INDEX ? state.siteTitle : `${title} · ${state.siteTitle}`;
 
   const footer = h('footer', { class: 'doc-footer' });
-  if (modified) footer.append(h('div', { class: 'modified' }, 'Last updated ' + new Date(modified).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })));
-  if (info.prev || info.next) {
-    const pager = h('nav', { class: 'pager' });
-    const card = (e, label, cls) => h('a', { class: 'pager-link ' + cls, href: routeHref(e.page) }, h('span', { class: 'pager-label' }, label), h('span', { class: 'pager-title' }, e.title));
-    pager.append(info.prev ? card(info.prev, 'Previous', 'prev') : h('span'));
-    if (info.next) pager.append(card(info.next, 'Next', 'next'));
-    footer.append(pager);
+  if (loaded) {
+    if (modified) footer.append(h('span', {}, 'Last updated ' + new Date(modified).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })));
+    footer.append(h('a', { href: encodeURI(page), target: '_blank', rel: 'noopener' }, 'Raw markdown'));
   }
 
   main.replaceChildren(doc, footer);
@@ -2350,7 +2381,7 @@ async function init() {
     const nav = await fetch('navigation.md', { cache: 'no-cache' });
     if (nav.ok) state.nav = parseNav(await nav.text());
   } catch { /* no navigation, pages still work */ }
-  state.flat = state.nav.flatMap(e => e.items || [e]).filter(e => e.page);
+  walkNav(state.nav, e => { if (e.page) state.flat.push(e); });
   renderNav();
   show(currentRoute());
 }
