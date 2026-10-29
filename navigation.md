@@ -14,6 +14,7 @@
 - [Imagemagick](linux/imagemagick.md)
 - [Mail](linux/mail.md)
 - [MySQL](linux/mysql.md)
+- [NetworkManager](linux/nmcli.md)
 - [OpenSSL](linux/openssl.md)
 - [Preseed](linux/preseed.md)
 - [Screen](linux/screen.md)
