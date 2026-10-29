@@ -25,13 +25,15 @@ Only way to wake up after this is to use the power button.
 
 Create `/etc/systemd/system/no-lid-wakeup.service`:
 
-    [Unit]
-    Description=No auto-wakeup when lid is open
-    [Service]
-    Type=oneshot
-    ExecStart=/bin/sh -c "echo XHC1 > /proc/acpi/wakeup && echo LID0 > /proc/acpi/wakeup"
-    [Install]
-    WantedBy=multi-user.target
+```ini
+[Unit]
+Description=No auto-wakeup when lid is open
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "echo XHC1 > /proc/acpi/wakeup && echo LID0 > /proc/acpi/wakeup"
+[Install]
+WantedBy=multi-user.target
+```
 
 ## Startup sound (To Be Tested)
 

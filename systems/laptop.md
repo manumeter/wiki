@@ -16,16 +16,22 @@ of physical offset). Then tell the kernel where to find the swapfile by
 adding the following to parameters to `GRUB_CMDLINE_LINUX_DEFAULT` in
 `/etc/default/grub`:
 
-    # example:
-    resume=/dev/mapper/system-root resume_offset=10252288
+```text
+# example:
+resume=/dev/mapper/system-root resume_offset=10252288
+```
 
 ### Handle Lid Close
 
 In `/etc/systemd/sleep.conf`, add/change:
 
-    [Sleep]
-    HibernateDelaySec=60min
+```ini
+[Sleep]
+HibernateDelaySec=60min
+```
 
 In `/etc/systemd/logind.conf`, add/change:
 
-    HandleLidSwitch=suspend-then-hibernate
+```ini
+HandleLidSwitch=suspend-then-hibernate
+```

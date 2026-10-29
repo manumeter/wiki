@@ -72,22 +72,26 @@ Create `/home/$USER/.rotate` with mode 750:
 
 Then, create `/home/$USER/.config/autostart/.rotate.desktop`:
 
-    [Desktop Entry]
-    Type=Application
-    Exec=/home/$USER/.rotate
-    Hidden=false
-    NoDisplay=false
-    X-GNOME-Autostart-enabled=true
-    Name[en_US]=Rotate
-    Name=Rotate
-    Comment[en_US]=
-    Comment=
+```ini
+[Desktop Entry]
+Type=Application
+Exec=/home/$USER/.rotate
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name[en_US]=Rotate
+Name=Rotate
+Comment[en_US]=
+Comment=
+```
 
 ## Sound
 
 Edit `/etc/pulse/daemon.conf`:
 
-    ; realtime-scheduling = no
+```ini
+; realtime-scheduling = no
+```
 
 **NOT WORKING YET**
 

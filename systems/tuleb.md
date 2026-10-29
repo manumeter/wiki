@@ -6,17 +6,21 @@
 - Download the netinstall image:
 
 
-    wget -O/boot/netinst-initrd.gz http://debian.ethz.ch/debian/dists/stable/main/installer-amd64/current/images/netboot/debian-installer/amd64/initrd.gz
-    wget -O/boot/netinst-linux http://debian.ethz.ch/debian/dists/stable/main/installer-amd64/current/images/netboot/debian-installer/amd64/linux
+  ```
+  wget -O/boot/netinst-initrd.gz http://debian.ethz.ch/debian/dists/stable/main/installer-amd64/current/images/netboot/debian-installer/amd64/initrd.gz
+  wget -O/boot/netinst-linux http://debian.ethz.ch/debian/dists/stable/main/installer-amd64/current/images/netboot/debian-installer/amd64/linux
+  ```
 
 
 - Add the following to `/etc/grub.d/40_custom` and run `update-grub`:
 
 
-    menuentry 'Debian NetInstall' {
-        linux /netinst-linux 
-        initrd /netinst-initrd.gz
-    }
+  ```
+  menuentry 'Debian NetInstall' {
+      linux /netinst-linux 
+      initrd /netinst-initrd.gz
+  }
+  ```
 
 - Access the VM console, reboot it, select "Debian NetInstaller" and run the installation. Partitioning:
   - 1GB /boot (ext4)
@@ -34,11 +38,13 @@
 - Install `cryptsetup` and create data partition:
 
 
-    cryptsetup luksFormat /dev/mapper/system-data
-    cryptsetup luksOpen /dev/mapper/system-data data
-    mkfs.ext4 /dev/mapper/data
-    mkdir /data
-    mount /dev/mapper/data /data
+  ```
+  cryptsetup luksFormat /dev/mapper/system-data
+  cryptsetup luksOpen /dev/mapper/system-data data
+  mkfs.ext4 /dev/mapper/data
+  mkdir /data
+  mount /dev/mapper/data /data
+  ```
 
 ## ToDo
 
