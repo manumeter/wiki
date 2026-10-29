@@ -286,7 +286,6 @@ main { min-width: 0; padding: 40px 48px 64px; }
 /* ---------- footer ---------- */
 
 .doc-footer { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 4px 12px; margin-top: 3.5rem; font-size: 13.5px; color: var(--text-3); }
-.doc-footer > * + *::before { content: "·"; margin-right: 12px; color: var(--text-3); }
 .doc-footer a { color: var(--text-3); }
 .doc-footer a:hover { color: var(--text); text-decoration: underline; }
 
@@ -2198,7 +2197,7 @@ async function show(route) {
 
   const footer = h('footer', { class: 'doc-footer' });
   if (loaded) {
-    if (modified) footer.append(h('span', {}, 'Last updated ' + new Date(modified).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })));
+    if (modified) footer.append(h('span', {}, 'Last updated ' + new Date(modified).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })), h('span', { class: 'sep', 'aria-hidden': 'true' }, '·'));
     footer.append(h('a', { href: encodeURI(page), target: '_blank', rel: 'noopener' }, 'Raw markdown'));
   }
 

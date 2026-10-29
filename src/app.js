@@ -342,7 +342,7 @@ async function show(route) {
 
   const footer = h('footer', { class: 'doc-footer' });
   if (loaded) {
-    if (modified) footer.append(h('span', {}, 'Last updated ' + new Date(modified).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })));
+    if (modified) footer.append(h('span', {}, 'Last updated ' + new Date(modified).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })), h('span', { class: 'sep', 'aria-hidden': 'true' }, '·'));
     footer.append(h('a', { href: encodeURI(page), target: '_blank', rel: 'noopener' }, 'Raw markdown'));
   }
 
